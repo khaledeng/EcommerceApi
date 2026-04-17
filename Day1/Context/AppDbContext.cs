@@ -1,10 +1,12 @@
 ﻿using Day1.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Day1.data
 {
-    public class AppDbContext:DbContext
-    {
+    public class AppDbContext:IdentityDbContext
+    { 
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
@@ -18,7 +20,7 @@ namespace Day1.data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
+            base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<Product>(Entity =>
             {

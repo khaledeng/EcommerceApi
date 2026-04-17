@@ -2,6 +2,7 @@
 using Day1.data;
 using Day1.DTOs;
 using Day1.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ namespace Day1.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductsController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -22,6 +24,8 @@ namespace Day1.Controllers
             _mapper = mapper;
         }
         [HttpGet]
+        [Authorize]
+
         public ActionResult<List<ReadProductDto>> GetAll()
         {
                  var list=_context.Products
