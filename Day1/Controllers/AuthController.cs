@@ -15,12 +15,17 @@ namespace Day1.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IConfiguration _configuration;
 
 
-        public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
+        public AuthController(UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager,
+            IConfiguration configuration
+            )
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _configuration = configuration;
         }
         //register
         [HttpPost("register")]
@@ -55,10 +60,10 @@ namespace Day1.Controllers
 
             //Create Token
 
-            var token = CreateToken(check);
+            var token =await CreateToken(check);
             return Ok(token);
         }
-        private string CreateToken(IdentityUser user)
+        private async Task<string> CreateToken(IdentityUser user)
         {
             //step1
             //create Claims
@@ -67,11 +72,20 @@ namespace Day1.Controllers
                 new Claim(ClaimTypes.Email,user.Email??=""),
                 new Claim(ClaimTypes.NameIdentifier,user.Id)
             };
+
+            var roles =await _userManager.GetRolesAsync(user); 
+            
+            foreach(var role in roles)
+            {
+                Claims.Add(new Claim(ClaimTypes.Role,role));
+            }
+
             //step2
 
-
+            var JWT = _configuration.GetSection("JWT");
+            var mytoken = JWT["Key"];
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(mytoken));
             //step3
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("YourSecretKey23asldjfklsdjflksdflsadflk"));
 
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

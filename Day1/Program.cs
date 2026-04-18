@@ -3,6 +3,7 @@ using Day1.data;
 using Day1.Mapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -16,15 +17,38 @@ namespace Day1
         {
             var builder = WebApplication.CreateBuilder(args);
 
+
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-            // Add services to the container.
+
             builder.Services.AddAutoMapper(typeof(MapperProfile));
             builder.Services.AddDataProtection();
 
             builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-               .AddEntityFrameworkStores<AppDbContext>();
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddDefaultTokenProviders();
 
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
+            });
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
+            });
+
+
+
+            var JWT = builder.Configuration.GetSection("JWT");
+            var token = JWT["Key"];
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -42,7 +66,8 @@ namespace Day1
                         ValidateIssuerSigningKey = true,
 
                         IssuerSigningKey = new SymmetricSecurityKey(
-                            Encoding.UTF8.GetBytes("YourSecretKey23asldjfklsdjflksdflsadflk"))
+                            Encoding.UTF8.GetBytes(token))
+
                     };
                 });
             builder.Services.AddSingleton(TimeProvider.System);
@@ -63,39 +88,18 @@ namespace Day1
                         System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
                 });
 
+            builder.Services.AddCors(
+                Option => Option.AddPolicy(
+                         "AllowAll",
+                           builder =>
+                           {
+                               builder
+                                     .AllowAnyOrigin()
+                                     .AllowAnyMethod()
+                                     .AllowAnyHeader();
 
-           
-
-
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddSwaggerGen(options =>
-            {
-                //options.AddSecurityDefinition
-                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
-                    In = ParameterLocation.Header,
-                    Description = "token"
-                });
-
-                //options.AddSecurityRequirement(new OpenApiSecurityRequirement
-                //{
-                //    {
-                //        //new OpenApiSecurityScheme
-                //        //{
-                //        //    //Reference = new OpenApiReference
-                //        //    //{
-                //        //    //    Type = ReferenceType.SecurityScheme,
-                //        //    //    Id = "Bearer"
-                //        //    //}
-                //        //},
-                //        //Array.Empty<string>()
-                //    }
-                //});
-            });
+                           }
+                    ));
 
             var app = builder.Build();
 
@@ -103,12 +107,12 @@ namespace Day1
 
             if (app.Environment.IsDevelopment())
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                //app.UseSwagger();
+                //app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();
-
+            app.UseCors("AllowAll");
             app.UseAuthentication();
             app.UseAuthorization();
             //app.MapIdentityApi<IdentityUser>();
