@@ -79,7 +79,10 @@ namespace Day1
             builder.Services.AddDbContext<AppDbContext>(
                 option => option.UseSqlServer(
                     builder.Configuration.
+            // للـ global
                     GetConnectionString("MyContString")));
+            // للـ local
+            //GetConnectionString("LocalContString")));
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -102,6 +105,12 @@ namespace Day1
                     ));
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                db.Database.Migrate();
+            }
 
             // Configure the HTTP request pipeline.
 

@@ -10,6 +10,7 @@ namespace Day1.Mapper
         public MapperProfile()
         {
             CreateMap<Product, ProductCreateDto>();
+            CreateMap<ProductCreateDto, Product>();
 
             CreateMap<Product, ReadProductDto>()
             .ForMember(temp => temp.CategoryName,
@@ -24,6 +25,7 @@ namespace Day1.Mapper
             CreateMap<Category, CategoryCreateDto>();
             CreateMap<Category, ReadCategoryDto>();
             CreateMap<Supplier, ReadSupplierDto>();
+            CreateMap<SupplierCreateDto, Supplier>();
         }
     }
 }
